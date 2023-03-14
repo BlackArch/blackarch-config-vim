@@ -1,0 +1,26 @@
+\documentclass{beamer}
+\usepackage{hyperref}
+
+\begin{document}
+
+\url{http://www.google.com}
+\url+http://www.google.com+
+\url{https://www.example.com/Spaces%20In%20URL/}
+\href{http://example.com}{Title text $with math$}
+\urldef{\mysite}\url{http://example.com}
+\hyperref[asdasd]{asd}
+
+\begin{equation}
+  e = mc^2
+  \label{einstein}
+\end{equation}
+Here, I'm referring to \autoref{einstein}.
+
+\section{
+  \texorpdfstring{Pythagoras: $a^2 + b^2 = c^2$}{Pythagoras: a² + b² = c²}
+}
+
+\subsection{\texorpdfstring{Derivative with metric entries $g_{nm}(t)$}
+{Derivative with metric entries}}
+
+\end{document}

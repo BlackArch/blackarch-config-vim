@@ -1,0 +1,12 @@
+set nocompatible
+set runtimepath^=../..
+set runtimepath+=../../after
+filetype plugin indent on
+syntax enable
+
+nnoremap q :qall!<cr>
+
+silent edit thesis.tex
+" call vimtex#profile#file('thesis.tex')
+
+quitall

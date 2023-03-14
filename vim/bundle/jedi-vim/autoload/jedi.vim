@@ -24,6 +24,7 @@ let s:default_settings = {
     \ 'call_signatures_command': "'<leader>n'",
     \ 'usages_command': "'<leader>n'",
     \ 'rename_command': "'<leader>r'",
+    \ 'rename_command_keep_name': "'<leader>R'",
     \ 'completions_enabled': 1,
     \ 'popup_on_dot': 'g:jedi#completions_enabled',
     \ 'documentation_command': "'K'",
@@ -36,9 +37,10 @@ let s:default_settings = {
     \ 'quickfix_window_height': 10,
     \ 'force_py_version': "'auto'",
     \ 'environment_path': "'auto'",
-    \ 'added_sys_path': "'[]'",
+    \ 'added_sys_path': '[]',
     \ 'project_path': "'auto'",
     \ 'smart_auto_mappings': 0,
+    \ 'case_insensitive_completion': 1,
     \ 'use_tag_stack': 1
 \ }
 
@@ -367,6 +369,14 @@ endfunction
 
 function! jedi#rename_visual(...) abort
     python3 jedi_vim.rename_visual()
+endfunction
+
+function! jedi#rename_keep_name(...) abort
+    python3 jedi_vim.rename(delete_word=False)
+endfunction
+
+function! jedi#rename_visual_keep_name(...) abort
+    python3 jedi_vim.rename_visual(use_selected_text_as_prompt_answer=True)
 endfunction
 
 function! jedi#completions(findstart, base) abort

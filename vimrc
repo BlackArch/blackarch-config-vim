@@ -3,26 +3,25 @@ if exists('py2') && has('python')
 elseif has('python3')
 endif
 
-" Vundle -----------------------------------------------------------------------
+" vim-plug ---------------------------------------------------------------------
 set nocompatible              " be iMproved, required
 filetype off                  " required
 
-" set the runtime path to include Vundle and initialize
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
+call plug#begin('~/.vim/bundle')
 
-Plugin 'VundleVim/Vundle.vim'
-Plugin 'vim-scripts/c.vim'
-Plugin 'scrooloose/nerdtree.git'
-Plugin 'davidhalter/jedi-vim'
-Plugin 'xavierd/clang_complete'
-Plugin 'fatih/vim-go'
-Plugin 'rust-lang/rust.vim'
-Plugin 'ycm-core/YouCompleteMe'
-Plugin 'Yggdroot/indentLine'
+Plug 'vim-scripts/c.vim'
+Plug 'scrooloose/nerdtree'
+Plug 'davidhalter/jedi-vim'
+Plug 'xavierd/clang_complete'
+Plug 'fatih/vim-go'
+Plug 'rust-lang/rust.vim'
+"Plug 'ycm-core/YouCompleteMe'
+Plug 'Yggdroot/indentLine'
+Plug 'lervag/vimtex'
+Plug 'iamcco/markdown-preview.nvim'
 
-call vundle#end()            " required
-" Vundle -----------------------------------------------------------------------
+call plug#end()
+" vim-plug ---------------------------------------------------------------------
 
 " file type and syntax highliting on
 filetype plugin indent on
@@ -129,7 +128,7 @@ au WinEnter * set cursorline
 set cursorline
 
 " clang stuff
-let g:clang_library_path='/usr/lib/llvm/12/lib64/'
+let g:clang_library_path='/usr/lib/'
 let g:clang_user_options='|| exit 0'
 let g:clang_complete_auto = 0
 let g:clang_compelte_macros=1

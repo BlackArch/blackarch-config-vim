@@ -62,7 +62,7 @@ experience.
     display `GOPATH` with |:GoPath|.
   * Integrated and improved snippets, supporting `ultisnips`, `neosnippet`,
     and `vim-minisnip`.
-  * Share your current code to play.golang.org with |:GoPlay|.
+  * Share your current code to `go.dev/play` with |:GoPlay|.
   * On-the-fly information about the word under the cursor. Plug it into your
     custom Vim function.
   * Text objects such as "a function" (|go-af|) or "inner function" (|go-if|).
@@ -122,8 +122,8 @@ manager's install command.
 
 You will also need to install all the necessary binaries. vim-go makes it easy
 to install all of them by providing a command, |:GoInstallBinaries|, to
-`go get` all the required binaries. The binaries will be installed to $GOBIN
-or $GOPATH/bin (default: $HOME/go/bin). It requires `git`.
+`go install` all the required binaries. The binaries will be installed to
+$GOBIN or $GOPATH/bin (default: $HOME/go/bin). It requires `git`.
 
 Depending on your installation method, you may have to generate the plugin's
 |:helptags| manually (e.g. `:helptags ALL`).
@@ -200,7 +200,7 @@ COMMANDS                                                         *go-commands*
                                                                      *:GoLint*
 :GoLint! [packages]
 
-    Run golint for the directory under your current file, or for the given
+    Run the linter for the directory under your current file, or for the given
     packages.
 
     If [!] is not given the first error is jumped to.
@@ -216,7 +216,7 @@ COMMANDS                                                         *go-commands*
 
     Open the relevant GoDoc in browser for either the word[s] passed to the
     command or by default, the word under the cursor. By default it opens the
-    documentation in 'https://pkg.go.dev'. To change it see |'g:go_doc_url'|.
+    documentation in `https://pkg.go.dev`. To change it see |'g:go_doc_url'|.
 
                                                                       *:GoFmt*
 :GoFmt
@@ -234,10 +234,10 @@ COMMANDS                                                         *go-commands*
                                                                      *:GoPlay*
 :[range]GoPlay
 
-    Share snippet to play.golang.org. If no [range] is given it shares
-    the whole file, otherwise the selected lines are shared. Snippet URL
-    is copied to system clipboard if Vim is compiled with 'clipboard' or
-     'xterm-clipboard' otherwise it's get yanked into the `""` register.
+    Share snippet to `go.dev/play`. If no [range] is given it shares the whole
+    file, otherwise the selected lines are shared. Snippet URL is copied to
+    system clipboard if Vim is compiled with 'clipboard' or 'xterm-clipboard'
+    otherwise it's get yanked into the `""` register.
 
                                                                       *:GoVet*
 :GoVet[!] [options]
@@ -411,6 +411,14 @@ CTRL-t
     in the background according to |'g:go_term_enabled'|. You can set the mode
     of the new terminal with |'g:go_term_mode'|.
 
+                                                                 *:GoTestFile*
+:GoTestFile[!] [expand]
+
+    Runs :GoTest, but only on the tests in the current file using 'go test's
+    '-run' flag.
+
+    If [!] is not given the first error is jumped to.
+
                                                                  *:GoTestFunc*
 :GoTestFunc[!] [expand]
 
@@ -467,6 +475,11 @@ CTRL-t
 
     If [!] is not given the first error is jumped to.
 
+                                                          *:GoCoverageOverlay*
+:GoCoverageOverlay file
+
+    Overlay the coverage profile from file.
+
                                                                  *:GoErrCheck*
 :GoErrCheck! [options]
 
@@ -500,6 +513,9 @@ CTRL-t
     supplied, then only the specified binaries will be installed. The default
     is to install everything.
 
+    A specific version of a binary can be specified by appending Go's version
+    syntax to the binary name. e.g. `:GoInstallBinaries gopls@v0.9.1`.
+
     Set |'g:go_get_update'| to disable updating dependencies.
 
                                                            *:GoUpdateBinaries*
@@ -509,6 +525,9 @@ CTRL-t
     `goimports`, `gopls`, etc. under |'g:go_bin_path'|. If [binaries] is
     supplied, then only the specified binaries will be updated. The default is
     to update everything.
+
+    A specific version of a binary can be specified by appending Go's version
+    syntax to the binary name. e.g. `:GoUpdateBinaries gopls@v0.9.1`.
 
     Set |'g:go_get_update'| to disable updating dependencies.
 
@@ -756,12 +775,13 @@ CTRL-t
     :Denite decls:foo
 <
                                                                      *:GoImpl*
-:GoImpl [receiver] [interface]
+:GoImpl [receiver] [receiver type] [interface]
 
     Generates method stubs for implementing an interface. If no arguments is
     passed it takes the identifier under the cursor to be the receiver and
     asks for the interface type to be generated. If used with arguments, the
-    receiver and the interface needs to be specified. Example usages:
+    receiver name, its type, and the interface needs to be specified. Example
+    usages:
 >
       :GoImpl f *Foo io.Writer
       :GoImpl t Type io.ReadWriteCloser
@@ -908,6 +928,11 @@ CTRL-t
     Filter the current go.mod buffer through "go mod edit -fmt" command.  It
     tries to preserve cursor position and avoids replacing the buffer with
     stderr output.
+                                                               *:GoModReload*
+:GoModReload [go.mod]
+
+    Force `gopls` to reload the go.mod file. When not explicitly provided, the
+    go.mod file ambient to the current buffer will be used.
 
                                                             *:GoAddWorkspace*
 :GoAddWorkspace [dir] ...
@@ -918,6 +943,12 @@ CTRL-t
 :GoLSPDebugBrowser
 
     Open a browser to see gopls debugging information.
+                                                                 *:GoExtract*
+:GoExtract
+
+    Extract the code fragment in the selected range to a new function and
+    replace the fragment with call to the function.
+
 
 ==============================================================================
 MAPPINGS                                                        *go-mappings*
@@ -975,6 +1006,10 @@ Calls `go test` for the current package.
 
 Calls `go test -run '...'` for the test function immediate to cursor
 
+                                                              *(go-test-file)*
+
+Calls `go test -run '...'` for all the tests in the current file.
+
                                                            *(go-test-compile)*
 
 Calls `go test -c` for the current package.
@@ -1003,7 +1038,7 @@ Adjust imports for the current buffer.
 
                                                                    *(go-lint)*
 
-Calls `golint` for the current package.
+Lints for the current package.
 
                                                                     *(go-vet)*
 
@@ -1121,6 +1156,7 @@ Show path from callgraph root to selected function
 Show free variables of selection
 
                                                            *(go-channelpeers)*
+                                                          *(go-channel-peers)*
 
 Show send/receive corresponding to selected channel op
 
@@ -1153,6 +1189,7 @@ Alternates between the implementation and test code in a new vertical split
 Calls `:GoImport` for the current package
 
                                                                   *(go-iferr)*
+                                                                 *(go-if-err)*
 
 Generate if err != nil { return ... } automatically which infer the type of
 return values and the numbers.
@@ -1163,6 +1200,13 @@ Calls |:GoModFmt| for the current buffer
 
                                                             *(go-diagnostics)*
 Calls `:GoDiagnostics`
+
+                                                             *(go-fillstruct)*
+                                                            *(go-fill-struct)*
+Calls `:GoFillStruct`
+
+                                                                *(go-extract)*
+Calls `:GoExtract`
 
 ==============================================================================
 TEXT OBJECTS                                                 *go-text-objects*
@@ -1230,8 +1274,9 @@ Uses `gopls` for autocompletion. By default, it is hooked up to 'omnifunc'.
                                                    *go#tool#DescribeBalloon()*
 
 Suitable to be used as an expression to show the evaluation balloon. By
-default only the type information is shown. |'g:go_doc_balloon'| can be used
-to also included partial documentation. See `help balloonexpr`.
+default only relevant diagnostics and the type information is shown.
+|'g:go_doc_balloon'| can be used to also included partial documentation. See
+`help balloonexpr`.
 
 ==============================================================================
 SETTINGS                                                        *go-settings*
@@ -1289,7 +1334,7 @@ By default it tries to find it automatically for the current OS. >
 <
                                                     *'g:go_play_open_browser'*
 
-Use this option to open browser after posting the snippet to play.golang.org
+Use this option to open browser after posting the snippet to `go.dev/play`.
 with |:GoPlay|. By default it's enabled. >
 
   let g:go_play_open_browser = 1
@@ -1510,9 +1555,10 @@ Valid options are `gopls` and `guru`. By default it's `gopls`.
                                                   *'g:go_def_mapping_enabled'*
 
 Use this option to enable/disable the default mapping of CTRL-],
-<C-LeftMouse>, g<C-LeftMouse> and (`gd`) for GoDef and CTRL-t for :GoDefPop.
-Disabling it allows you to map something else to these keys or mappings.
-Default is enabled. >
+<C-LeftMouse>, g<C-LeftMouse> and (`gd`) for GoDef, CTRL-t for :GoDefPop, and
+(`gD`) for :GoDefType. Disabling it allows you to map something else to these
+keys or mappings. Default is enabled.
+>
 
   let g:go_def_mapping_enabled = 1
 <
@@ -1643,7 +1689,7 @@ metalinter.
 When `g:go_metalinter_command` is set to `staticcheck`, the default value is
 an empty list; `staticcheck`'s `-checks` flag will not be used.
 >
-  let g:go_metalinter_autosave_enabled = ['all']
+  let g:go_metalinter_enabled = ['all']
 <
 
 When `g:go_metalinter_command` is set to `golangci-lint'`, the default value
@@ -1983,7 +2029,7 @@ use different templates for different projects.
                                                    *'g:go_template_test_file'*
 
 Like with |'g:go_template_file'|, this specifies the file to use for test
-tempaltes. The template file should be under the `templates` folder,
+templates. The template file should be under the `templates` folder,
 alternatively absolute paths can be used, too. Checkout
 |'g:go_template_autocreate'| for more info. By default, the
 `hello_world_test.go` file is used.
@@ -2518,6 +2564,17 @@ Preserve window layout in debugging mode. This setting is considered only when
 >
   let g:go_debug_preserve_layout = 0
 <
+                                               *'g:go_debug_substitute_paths'*
+
+Substitute paths in the debugger. This is a list of lists where each element
+is a list wherein the remote path (the from side) is the first element and the
+local path (the to side) is the second element. These are necessary when the
+binary being debugged was not built from the same location that its source
+resides locally. By default it is empty.
+
+>
+  let g:go_debug_substitute_paths = [['/compiled/from', '/cloned/to']]
+<
                                                        *'g:go_debug_mappings'*
 
 Contains custom key mapping information to customize the active mappings
@@ -2732,9 +2789,9 @@ If you see errors like this:
 <
 that means your local Go setup is broken or the remote website is down. For
 example sometimes code.google.com times out. To test, just execute a simple
-`go get`:
+`go install`:
 >
-  go get golang.org/x/tools/cmd/goimports
+  go install golang.org/x/tools/cmd/goimports@latest
 <
 You'll see a more detailed error. If this works, vim-go will work too.
 

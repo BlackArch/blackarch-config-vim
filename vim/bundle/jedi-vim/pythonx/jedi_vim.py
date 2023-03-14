@@ -218,18 +218,18 @@ _current_project_cache = None, None
 
 
 def get_project():
-    try:
-        vim_environment_path = vim_eval("b:jedi_environment_path")
-    except VimError:
-        vim_environment_path = ""
-
-    if vim_environment_path in ("", None):
-        vim_environment_path = vim_eval("g:jedi#environment_path")
+    vim_environment_path = vim_eval(
+        "get(b:, 'jedi_environment_path', g:jedi#environment_path)"
+    )
     vim_project_path = vim_eval("g:jedi#project_path")
-    vim_added_sys_path = vim_eval("g:jedi#added_sys_path")
+
+    vim_added_sys_path = vim_eval("get(g:, 'jedi#added_sys_path', [])")
+    vim_added_sys_path += vim_eval("get(b:, 'jedi_added_sys_path', [])")
 
     global _current_project_cache
-    cache_key = dict(project_path=vim_project_path, environment_path=vim_environment_path)
+    cache_key = dict(project_path=vim_project_path,
+                     environment_path=vim_environment_path,
+                     added_sys_path=vim_added_sys_path)
     if cache_key == _current_project_cache[0]:
         return _current_project_cache[1]
 
@@ -294,7 +294,9 @@ def load_project():
         project.save()
 
     global _current_project_cache
-    cache_key = dict(project_path=path, environment_path=env_path)
+    cache_key = dict(project_path=path,
+                     environment_path=env_path,
+                     added_sys_path=[])
     _current_project_cache = cache_key, project
 
 
@@ -325,6 +327,10 @@ def get_pos(column=None):
 @_check_jedi_availability(show_error=False)
 @catch_and_print_exceptions
 def completions():
+    jedi.settings.case_insensitive_completion = \
+        bool(int(vim_eval("get(b:, 'jedi_case_insensitive_completion', "
+                          "g:jedi#case_insensitive_completion)")))
+
     row, column = vim.current.window.cursor
     # Clear call signatures in the buffer so they aren't seen by the completer.
     # Call signatures in the command line can stay.
@@ -354,7 +360,9 @@ def completions():
             completions = script.complete(*get_pos(column))
             signatures = script.get_signatures(*get_pos(column))
 
-            add_info = "preview" in vim.eval("&completeopt").split(",")
+            add_info = \
+                any(option in vim.eval("&completeopt").split(",")
+                    for option in ("preview", "popup"))
             out = []
             for c in completions:
                 d = dict(word=PythonToVimStr(c.name[:len(base)] + c.complete),
@@ -990,7 +998,7 @@ def cmdline_call_signatures(signatures):
 
 @_check_jedi_availability(show_error=True)
 @catch_and_print_exceptions
-def rename():
+def rename(delete_word=True):
     if not int(vim.eval('a:0')):
         # Need to save the cursor position before insert mode
         cursor = vim.current.window.cursor
@@ -1002,7 +1010,12 @@ def rename():
 
         vim_command("let s:jedi_replace_orig = expand('<cword>')")
         line = vim_eval('getline(".")')
-        vim_command('normal! diw')
+
+        if delete_word:
+            vim_command('normal! diw')
+        else:
+            vim_command('normal! yiwel')
+
         if re.match(r'\w+$', line[cursor[1]:]):
             # In case the deleted word is at the end of the line we need to
             # move the cursor to the end.
@@ -1034,9 +1047,17 @@ def rename():
             return do_rename(replace)
 
 
-def rename_visual():
-    replace = vim.eval('input("Rename to: ")')
-    orig = vim.eval('getline(".")[(getpos("\'<")[2]-1):getpos("\'>")[2]]')
+def rename_visual(use_selected_text_as_prompt_answer=False):
+    orig = vim.eval('getline(".")[(getpos("\'<")[2]-1):getpos("\'>")[2]'
+                    '-((&selection ==# "exclusive") ? 2 : 1)]')
+
+    input_text = ""
+    if use_selected_text_as_prompt_answer:
+        input_text = orig
+
+    replace = vim.eval(
+        'input("Rename to:", "{}")'.format(PythonToVimStr(input_text))
+    )
     do_rename(replace, orig)
 
 
@@ -1047,6 +1068,10 @@ def do_rename(replace, orig=None):
 
     if orig is None:
         orig = vim_eval('s:jedi_replace_orig')
+
+    if orig == replace:
+        echo_highlight('Jedi did 0 renames.')
+        return
 
     # Save original window / tab.
     saved_tab = int(vim_eval('tabpagenr()'))

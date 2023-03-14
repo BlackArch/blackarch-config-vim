@@ -1,0 +1,23 @@
+\documentclass{beamer}
+\usepackage{cleveref}
+
+\crefname{equation}{Eq}{Eqs}
+
+\begin{document}
+
+\label[asd]{sec:cleveref}
+
+\cref{eq:test}
+\crefrange{eq:test}{eq:test2}
+
+\nameCrefs{eq:test}
+\nameCref{eq:test}
+\namecrefs{eq:test}
+\namecref{eq:test}
+\lcnamecrefs{eq:test}
+\lcnamecref{eq:test}
+
+Spelling error here: FooBar
+\Cref{FooBar}
+
+\end{document}

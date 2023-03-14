@@ -126,8 +126,8 @@ function! go#util#gomod() abort
   return substitute(s:exec(['go', 'env', 'GOMOD'])[0], '\n', '', 'g')
 endfunction
 
-" gomodcache returns 'go env GOMODCACHE'. Use go#util#env('gomodcache')
-" instead.
+" gomodcache returns 'go env GOMODCACHE'. This is an internal function and
+" shouldn't be used. Use go#util#env('gomodcache') instead.
 function! go#util#gomodcache() abort
   return substitute(s:exec(['go', 'env', 'GOMODCACHE'])[0], '\n', '', 'g')
 endfunction
@@ -140,7 +140,7 @@ function! go#util#hostosarch() abort
 endfunction
 
 " go#util#ModuleRoot returns the root directory of the module of the current
-" buffer. An optional argument is can be provided to check an arbitrary
+" buffer. An optional argument can be provided to check an arbitrary
 " directory.
 function! go#util#ModuleRoot(...) abort
   let l:wd = ''
@@ -183,6 +183,8 @@ function! s:system(cmd, ...) abort
   let l:shell = &shell
   let l:shellredir = &shellredir
   let l:shellcmdflag = &shellcmdflag
+  let l:shellquote = &shellquote
+  let l:shellxquote = &shellxquote
 
   if !go#util#IsWin() && executable('/bin/sh')
       set shell=/bin/sh shellredir=>%s\ 2>&1 shellcmdflag=-c
@@ -192,6 +194,8 @@ function! s:system(cmd, ...) abort
     if executable($COMSPEC)
       let &shell = $COMSPEC
       set shellcmdflag=/C
+      set shellquote&
+      set shellxquote&
     endif
   endif
 
@@ -202,6 +206,8 @@ function! s:system(cmd, ...) abort
     let &shell = l:shell
     let &shellredir = l:shellredir
     let &shellcmdflag = l:shellcmdflag
+    let &shellquote = l:shellquote
+    let &shellxquote = l:shellxquote
   endtry
 endfunction
 
@@ -292,7 +298,21 @@ endfunction
 " Shelljoin returns a shell-safe string representation of arglist. The
 " {special} argument of shellescape() may optionally be passed.
 function! go#util#Shelljoin(arglist, ...) abort
+  " Preserve original shell. This needs to be kept in sync with how s:system
+  " sets shell.
+  let l:shell = &shell
+
   try
+    if !go#util#IsWin() && executable('/bin/sh')
+        set shell=/bin/sh
+    endif
+
+    if go#util#IsWin()
+      if executable($COMSPEC)
+        let &shell = $COMSPEC
+      endif
+    endif
+
     let ssl_save = &shellslash
     set noshellslash
     if a:0
@@ -301,19 +321,11 @@ function! go#util#Shelljoin(arglist, ...) abort
 
     return join(map(copy(a:arglist), 'shellescape(v:val)'), ' ')
   finally
+    " Restore original values
     let &shellslash = ssl_save
+    let &shell = l:shell
   endtry
 endfunction
-
-fu! go#util#Shellescape(arg)
-  try
-    let ssl_save = &shellslash
-    set noshellslash
-    return shellescape(a:arg)
-  finally
-    let &shellslash = ssl_save
-  endtry
-endf
 
 " Shelllist returns a shell-safe representation of the items in the given
 " arglist. The {special} argument of shellescape() may optionally be passed.
@@ -322,9 +334,9 @@ function! go#util#Shelllist(arglist, ...) abort
     let ssl_save = &shellslash
     set noshellslash
     if a:0
-      return map(copy(a:arglist), 'shellescape(v:val, ' . a:1 . ')')
+      return map(copy(a:arglist), 'go#util#Shelljoin(v:val, ' . a:1 . ')')
     endif
-    return map(copy(a:arglist), 'shellescape(v:val)')
+    return map(copy(a:arglist), 'go#util#Shelljoin(v:val)')
   finally
     let &shellslash = ssl_save
   endtry
@@ -721,16 +733,14 @@ endfunction
 function! go#util#Chdir(dir) abort
   if !exists('*chdir')
     let l:olddir = getcwd()
-    let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
-    execute printf('cd %s', fnameescape(a:dir))
+    let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd' : 'cd'
+    execute printf('%s %s', cd, fnameescape(a:dir))
     return l:olddir
   endif
   return chdir(a:dir)
 endfunction
 
-" go#util#TestName returns the name of the test function that preceeds the
-" cursor.
-function go#util#TestName() abort
+function! go#util#testLine() abort
   " search flags legend (used only)
   " 'b' search backward instead of forward
   " 'c' accept a match at the cursor position
@@ -739,7 +749,14 @@ function go#util#TestName() abort
   "
   " for the full list
   " :help search
-  let l:line = search('func \(Test\|Example\)', "bcnW")
+  let l:line = search('^func \(Test\|Example\)', "bcnW")
+  return l:line
+endfunction
+
+" go#util#TestName returns the name of the test function that preceeds the
+" cursor.
+function! go#util#TestName() abort
+  let l:line = go#util#testLine()
 
   if l:line == 0
     return ''
@@ -747,6 +764,51 @@ function go#util#TestName() abort
 
   let l:decl = getline(l:line)
   return split(split(l:decl, " ")[1], "(")[0]
+endfunction
+
+" go#util#TestNamesInFile returns the names of the test function in the
+" current file.
+function! go#util#TestNamesInFile() abort
+  let l:startpos = getpos('.')
+
+  let l:lines = []
+  call cursor('$', 1)
+  let l:line = go#util#testLine()
+  while l:line isnot 0
+    let l:lines = add(l:lines, l:line)
+    call cursor(l:line-1, 1)
+    let l:line = go#util#testLine()
+  endwhile
+ 
+  call setpos('.', l:startpos)
+
+  let l:tests = []
+
+  " iterate over the lines in their reverse order, because they'll be in
+  " reverse order, but returning the test names in file order makes the most
+  " sense.
+  for l:line in reverse(l:lines)
+    let l:decl = getline(l:line)
+    let l:tests = add(l:tests, split(split(l:decl, " ")[1], "(")[0])
+  endfor
+
+  return l:tests
+endfunction
+
+function! go#util#ExpandPattern(...) abort
+  let l:packages = []
+  for l:pattern in a:000
+    let l:pkgs = go#tool#List(l:pattern)
+    if l:pkgs is -1
+      call go#util#EchoError('could not expand package pattern')
+      continue
+    endif
+
+    let l:packages = extend(l:packages, l:pkgs)
+    call go#util#EchoInfo(printf("l:packages = %s, l:pkgs = %s", l:packages, l:pkgs))
+  endfor
+
+  return uniq(sort(l:packages))
 endfunction
 
 " restore Vi compatibility settings

@@ -1,0 +1,82 @@
+\documentclass{amsart}
+\usepackage{amsmath}
+
+\DeclareMathOperator{\GL}{GL}
+\newcommand{\SL}{\operatorname{SL}}
+
+\numberwithin{equation}{section}
+
+\subjclass[2010]{Primary: 11F67}
+
+\begin{document}
+
+\begin{align}
+  f(x) &= \bigg\lvert 0 \bigg\rvert \\
+  f(x) &= \Bigg\lVert 0 \Bigg\rVert
+  \tag{mylabel}
+\end{align}
+
+\begin{equation}
+  \sum_{\begin{subarray}{l}i\in\Lambda\\ 0<j<n\end{subarray}} P(i,j)
+\end{equation}
+
+\begin{alignat}{3}
+  f(x) &= \bigg\lvert 0 \bigg\rvert \\
+  f(x) &= \Bigg\lVert 0 \Bigg\rVert
+  \tag*{mylabel}
+\end{alignat}
+
+\begin{alignat*}{3}
+  f(x) &= \bigg\lvert 0 \bigg\rvert \\
+  f(x) &= \Bigg\lVert 0 \Bigg\rVert
+\end{alignat*}
+
+\begin{xalignat}{3}
+  f(x) &= \bigg\lvert 0 \bigg\rvert \\
+  f(x) &= \Bigg\lVert 0 \Bigg\rVert
+\end{xalignat}
+
+\begin{xalignat*}{3}
+  f(x) &= \bigg\lvert 0 \bigg\rvert \\
+  f(x) &= \Bigg\lVert 0 \Bigg\rVert
+\end{xalignat*}
+
+\begin{xxalignat}{3}
+  f(x) &= \bigg\lvert 0 \bigg\rvert \\
+  f(x) &= \Bigg\lVert 0 \Bigg\rVert
+  \label{speled wronng}
+\end{xxalignat}
+
+See also \eqref{speled wronng}.
+Spelling: {speled wronng}.
+$  operatorname{ Re } = 1 $
+$ \operatorname{ Re } = 1 $
+
+\begin{equation}
+  \begin{Vmatrix}
+    a & b \\
+    c & d \\
+  \end{Vmatrix}
+  \begin{vmatrix}
+    a & b \\
+    c & d \\
+  \end{vmatrix}
+  \begin{Bmatrix}
+    a & b \\
+    c & d \\
+  \end{Bmatrix}
+  \begin{bmatrix}
+    a & b \\
+    c & d \\
+  \end{bmatrix}
+  \begin{pmatrix}
+    a & b \\
+    c & d \\
+  \end{pmatrix}
+  \begin{smallmatrix}
+    a & b \\
+    c & d \\
+  \end{smallmatrix}
+\end{equation}
+
+\end{document}

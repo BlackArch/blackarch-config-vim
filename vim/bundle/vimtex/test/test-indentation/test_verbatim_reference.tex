@@ -1,0 +1,41 @@
+\documentclass{minimal}
+\usepackage{markdown}
+\usepackage{listings}
+\usepackage{minted}
+
+\begin{document}
+
+\begin{verbatim}
+#!/bin/bash
+echo "test"
+\end{verbatim}
+
+\begin{lstlisting}
+Indent
+  should
+    not affect verbatim environments!
+\end{lstlisting}
+
+\begin{markdown}
+An h1 header
+============
+
+Paragraphs are separated by a blank line.
+
+2nd paragraph.
+*Italic*, **bold**, and `monospace`.
+Itemized lists look like:
+
+* this one
+* that one
+* the other one
+\end{markdown}
+
+\begin{minted}{c}
+  int main() {
+    printf("hello, world");
+    return 0;
+  }
+\end{minted}
+
+\end{document}

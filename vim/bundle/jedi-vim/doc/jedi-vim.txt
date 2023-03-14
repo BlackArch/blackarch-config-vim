@@ -27,8 +27,9 @@ Contents                                *jedi-vim-contents*
     5.4  Go to stub                     |g:jedi#goto_stubs_command|
     5.5. Show documentation             |g:jedi#documentation_command|
     5.6. Rename variables               |g:jedi#rename_command|
-    5.7. Show name usages               |g:jedi#usages_command|
-    5.8. Open module by name            |:Pyimport|
+    5.7. Rename variables (Reuse name)  |g:jedi#rename_command_keep_name|
+    5.8. Show name usages               |g:jedi#usages_command|
+    5.9. Open module by name            |:Pyimport|
 6. Configuration                        |jedi-vim-configuration|
     6.1. auto_initialization            |g:jedi#auto_initialization|
     6.2. auto_vim_configuration         |g:jedi#auto_vim_configuration|
@@ -47,6 +48,9 @@ Contents                                *jedi-vim-contents*
     6.15. environment_path              |g:jedi#environment_path|
                                         |b:jedi_environment_path|
     6.16. added_sys_path                |g:jedi#added_sys_path|
+                                        |b:jedi_added_sys_path|
+    6.17. case_insensitive_completion   |g:jedi#case_insensitive_completion|
+                                        |b:jedi_case_insensitive_completion|
 7. Testing                              |jedi-vim-testing|
 8. Contributing                         |jedi-vim-contributing|
 9. License                              |jedi-vim-license|
@@ -304,7 +308,19 @@ with the new one. The number of performed renames is displayed in the command
 line.
 
 ------------------------------------------------------------------------------
-5.7. `g:jedi#usages_command`            *g:jedi#usages_command*
+5.7. `g:jedi#rename_command_keep_name`        *g:jedi#rename_command_keep_name*
+Function: `jedi#rename()`
+Default: <leader>R                                            Rename variables
+                  (This key mapping does not delete the word under the cursor)
+
+Jedi-vim keeps the word currently under the cursor, moves the cursor to the end
+of the word, and puts Vim in insert mode, where the user is expected to enter
+the new variable name. Upon leaving insert mode, Jedi-vim then renames all
+occurrences of the old variable name with the new one. The number of performed
+renames is displayed in the command line.
+
+------------------------------------------------------------------------------
+5.8. `g:jedi#usages_command`            *g:jedi#usages_command*
 Function: `jedi#usages()`
 Default: <leader>n                      Show usages of a name.
 
@@ -312,7 +328,7 @@ The quickfix window is populated with a list of all names which point to the
 definition of the name under the cursor.
 
 ------------------------------------------------------------------------------
-5.8. Open module by name                *:Pyimport*
+5.9. Open module by name                *:Pyimport*
 Function: `jedi#py_import(args)`
 Default: :Pyimport                      e.g. `:Pyimport os` shows os.py in VIM.
 
@@ -346,7 +362,8 @@ Default: 1 (Perform automatic initialization)
 ------------------------------------------------------------------------------
 6.2. `g:jedi#auto_vim_configuration`    *g:jedi#auto_vim_configuration*
 
-Jedi-vim sets 'completeopt' to `menuone,longest,preview` by default, if
+Jedi-vim sets 'completeopt' to `menuone,longest` and `popup` (for Vim version
+numbers higher than 8.1.1882) respectively `preview` by default, if
 'completeopt' is not changed from Vim's default.
 It also remaps <Ctrl-C> to <Esc> in insert mode.
 
@@ -385,12 +402,14 @@ Default: 1 (Automatically select first completion entry)
 ------------------------------------------------------------------------------
 6.5. `g:jedi#auto_close_doc`            *g:jedi#auto_close_doc*
 
-When doing completion, jedi-vim shows the docstring of the currently selected
-item in a preview window. By default, this window is being closed after
+When doing completion and jedi-vim shows the docstring of the currently selected
+item in a preview (not a popup) window, this window is being closed after
 insertion of a completion item.
 
 Set this to 0 to leave the preview window open even after leaving insert mode.
 This could be useful if you want to browse longer docstrings.
+
+This setting is ignored if a popup instead of a preview window is used.
 
 Options: 0 or 1
 Default: 1 (Automatically close preview window upon leaving insert mode)
@@ -527,11 +546,27 @@ Default: "auto"
 
 ------------------------------------------------------------------------------
 6.16. `g:jedi#added_sys_path`                *g:jedi#added_sys_path*
+                                             *b:jedi_added_sys_path*
 
 To add extra sys_path.
 
+The buffer-local variable `b:jedi_added_sys_path` can be used to add
+additional extra sys_path.
+
 Examples: ["../site-packages"]
 Default: []
+
+------------------------------------------------------------------------------
+6.17. `g:jedi#case_insensitive_completion` *g:jedi#case_insensitive_completion*
+                                           *b:jedi_case_insensitive_completion*
+
+0 to disable case insensitive completion.
+1 to enable case insensitive completion (default).
+
+The buffer-local variable `b:jedi_case_insensitive_completion` can be used to
+override the global variable `g:jedi#case_insensitive_completion`.
+
+Default: 1
 
 ==============================================================================
 7. Testing                              *jedi-vim-testing*
